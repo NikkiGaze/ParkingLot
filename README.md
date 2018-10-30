@@ -1,4 +1,7 @@
-# ParkingLot
+# ParkingLot      
+     
+REQUIREMENTS
+- python2.7 python-matplotlib
 
 TO BUILD
 - g++ main.cpp -std=c++11 -I/usr/include/python2.7 -lpython2.7
