@@ -2,9 +2,10 @@
 #include <sstream>
 #include <string>
 #include <fstream>
+
 #include <unordered_map>
-#include <map>
 #include <set>
+
 #include <algorithm>
 #include <ctime>
 
@@ -39,18 +40,6 @@ void drawPlot(const vector<int> &values, const vector<time_t> &times,
 }
 
 #endif
-
-
-//struct TimeStamp
-//{
-//    time_t timestamp;
-//    TimeStamp(const string &timeAsString)
-//    {
-//        time_t hour, min;
-//        sscanf(timeAsString.c_str(),"%d:%d", &hour, &min);
-//        timestamp = hour * 60 + min;
-//    }
-//};
 
 //--------------------------------------------------------
 
