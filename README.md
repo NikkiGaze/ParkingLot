@@ -18,5 +18,5 @@ TO BUILD
 - cl main.cpp
 
 TO RUN
-- main.exe 
+- main.exe sample.txt
 -----------
