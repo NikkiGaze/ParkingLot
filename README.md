@@ -1,5 +1,7 @@
 # ParkingLot      
-     
+   
+LINUX:
+-----------
 REQUIREMENTS
 - python2.7 python-matplotlib
 
@@ -8,3 +10,13 @@ TO BUILD
 
 TO RUN
 - ./a.out sample.txt 
+-----------
+
+WIN:
+-----------
+TO BUILD
+- cl main.cpp
+
+TO RUN
+- main.exe 
+-----------
