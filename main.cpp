@@ -7,13 +7,31 @@
 #include <algorithm>
 
 //#define DRAW_PLOT
+using namespace std;
+using uint = unsigned int;
 
 #ifdef DRAW_PLOT
 #include "matplotlibcpp.h"
+namespace plt = matplotlibcpp;
+
+void drawPlot(const vector<int> &values, const vector<uint> &times)
+{
+    vector<double> xValues, yValues;
+
+    for(size_t i = 0; i < values.size(); i++)
+    {
+        double x = times[i];
+        double y = values[i];
+        xValues.push_back(x);
+        yValues.push_back(y);
+    }
+    plt::plot(xValues, yValues);
+    plt::xlim(0, 24 * 60);
+    plt::show();
+}
+
 #endif
 
-using namespace std;
-using uint = unsigned int;
 
 //struct TimeStamp
 //{
@@ -158,10 +176,7 @@ int main(int, char *argv[])
                    max_count);
 
 #ifdef DRAW_PLOT
-    namespace plt = matplotlibcpp;
-    plt::plot(times, values);
-    plt::xlim(0, calcTimestamp("24:00"));
-    plt::show();
+    drawPlot(values, times);
 #endif
     return 0;
 }
