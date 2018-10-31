@@ -3,7 +3,7 @@
 LINUX:
 -----------
 REQUIREMENTS
-- python2.7 python-matplotlib
+- python2.7 python-matplotlib - for plotting, simple 3d party wrapper of python lib is used, taken from here https://github.com/lava/matplotlib-cpp
 
 TO BUILD
 - g++ main.cpp -std=c++11 -I/usr/include/python2.7 -lpython2.7
