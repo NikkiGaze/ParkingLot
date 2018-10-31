@@ -4,44 +4,58 @@
 #include <fstream>
 #include <unordered_map>
 #include <map>
+#include <algorithm>
 
+//#define DRAW_PLOT
+
+#ifdef DRAW_PLOT
 #include "matplotlibcpp.h"
+#endif
 
 using namespace std;
-namespace plt = matplotlibcpp;
+using uint = unsigned int;
 
-struct TimeStamp
-{
-    int timestamp;
-    TimeStamp(const string &timeAsString)
-    {
-        int hour, min;
-        scanf("%d:%d", &hour, &min);
-        timestamp = hour * 60 + min;
-    }
-};
+//struct TimeStamp
+//{
+//    uint timestamp;
+//    TimeStamp(const string &timeAsString)
+//    {
+//        uint hour, min;
+//        sscanf(timeAsString.c_str(),"%d:%d", &hour, &min);
+//        timestamp = hour * 60 + min;
+//    }
+//};
 
-int calcTimestamp(const string &timeAsString)
+//--------------------------------------------------------
+
+uint calcTimestamp(const string &timeAsString)
 {
-    int hour, min;
-    sscanf(timeAsString.c_str(),"%d:%d", &hour, &min);
+    uint hour, min;
+    sscanf(timeAsString.c_str(), "%d:%d", &hour, &min);
 
     return hour * 60 + min;
 }
 
-int calcTimestring(const TimeStamp &ts)
+string calcTimestring(const uint &ts)
 {
-//    int hour, min;
-//    sscanf(timeAsString.c_str(),"%d:%d", &hour, &min);
+    uint hour, min;
+    hour = ts / 60;
+    min = ts % 60;
 
-    return 1;//hour * 60 + min;
+    char buf[5];
+    sprintf(buf, "%.2d:%.2d", hour, min);
+    string result = buf;
+
+    return result;
 }
 
-typedef unordered_map<int, int> BusynessMap;
+//--------------------------------------------------------
+
+typedef unordered_map<uint, int> BusynessMap;
 
 BusynessMap readData(const string &filename,
-                     int &min_time,
-                     int &max_time)
+                     uint &min_time,
+                     uint &max_time)
 {
     BusynessMap result;
     min_time = INT32_MAX;
@@ -59,8 +73,8 @@ BusynessMap readData(const string &filename,
             break;
         }
 
-        int in_ts = calcTimestamp(in_time);
-        int out_ts = calcTimestamp(out_time);
+        uint in_ts = calcTimestamp(in_time);
+        uint out_ts = calcTimestamp(out_time);
 
         if (result.find(in_ts) == result.end())
         {
@@ -87,30 +101,68 @@ BusynessMap readData(const string &filename,
     return result;
 }
 
-int main(int argc, char *argv[])
+//--------------------------------------------------------
+
+void printIntervals(const vector<int> &values, const vector<uint> &times,
+                    const int max_value)
 {
-    int min_time, max_time;
+    bool isIntervalStarted = false;
+    for (uint i = 0; i <= values.size(); i++)
+    {
+        if (values[i] == max_value)
+        {
+            if (isIntervalStarted)
+                continue;
+            cout << "From " << calcTimestring(times[i]);
+            isIntervalStarted = true;
+        }
+        else if (isIntervalStarted)
+        {
+            cout << " to " << calcTimestring(times[i-1]) << endl;
+            isIntervalStarted = false;
+        }
+    }
+}
+
+//--------------------------------------------------------
+
+int main(int, char *argv[])
+{
     if (!argv[1])
+    {
+        printf("No data file passed!");
         return -1;
+    }
 
     string filename = argv[1];
-    BusynessMap data_map = readData(filename,
-                                    min_time, max_time);
+    uint start_time, end_time;
 
+    BusynessMap data_map = readData(filename,
+                                    start_time, end_time);
     vector<int> values;
-    vector<int> times;
+    vector<uint> times;
     int current_count = 0;
-    for (int i = min_time; i <= max_time; i++)
+    int max_count = 0;
+    for (uint i = start_time; i <= end_time; i++)
     {
         current_count += data_map[i];
-//        cout << "Timestamp " << i << "load " << current_count << endl;
+
+        if (current_count > max_count)
+            max_count = current_count;
+
         values.push_back(current_count);
         times.push_back(i);
     }
 
+    printIntervals(values, times,
+                   max_count);
+
+#ifdef DRAW_PLOT
+    namespace plt = matplotlibcpp;
     plt::plot(times, values);
     plt::xlim(0, calcTimestamp("24:00"));
     plt::show();
+#endif
     return 0;
 }
 
