@@ -3,7 +3,7 @@
 #include <string>
 #include <fstream>
 
-#include <unordered_map>
+#include <map>
 #include <set>
 
 #include <algorithm>
@@ -87,16 +87,11 @@ string calcTimestringForDate(const time_t &ts)
 
 //--------------------------------------------------------
 
-typedef unordered_map<time_t, int> BusynessMap;
+typedef map<time_t, int> BusynessMap;
 
-BusynessMap readDataFromTXT(const string &filename,
-                     time_t &min_time,
-                     time_t &max_time,
-                     set<time_t> &timestamps_set)
+BusynessMap readDataFromTXT(const string &filename)
 {
     BusynessMap result;
-    min_time = INT32_MAX;
-    max_time = 0;
 
     ifstream file(filename);
 
@@ -113,8 +108,6 @@ BusynessMap readDataFromTXT(const string &filename,
         time_t in_ts = calcTimestampForTime(in_time);
         time_t out_ts = calcTimestampForTime(out_time);
 
-        timestamps_set.insert(in_ts);
-        timestamps_set.insert(out_ts);
 
         if (result.find(in_ts) == result.end())
         {
@@ -134,9 +127,6 @@ BusynessMap readDataFromTXT(const string &filename,
             result[out_ts]--;
         }
 
-        min_time = std::min(min_time, in_ts);
-        max_time = std::max(max_time, out_ts);
-
     }
     return result;
 }
@@ -144,14 +134,9 @@ BusynessMap readDataFromTXT(const string &filename,
 static const string JSONArrivalKey = "ArrivalTime";
 static const string JSONLeaveKey = "LeaveTime";
 
-BusynessMap readDataFromJSON(const string &filename,
-                     time_t &min_time,
-                     time_t &max_time,
-                     set<time_t> &timestamps_set)
+BusynessMap readDataFromJSON(const string &filename)
 {
     BusynessMap result;
-    min_time = INT32_MAX;
-    max_time = 0;
 
     std::ifstream instream(filename);
     json json_data;
@@ -167,9 +152,6 @@ BusynessMap readDataFromJSON(const string &filename,
 
             time_t in_ts = calcTimestampForDate(in_time);
             time_t out_ts = calcTimestampForDate(out_time);
-
-            timestamps_set.insert(in_ts);
-            timestamps_set.insert(out_ts);
 
             if (result.find(in_ts) == result.end())
             {
@@ -188,9 +170,6 @@ BusynessMap readDataFromJSON(const string &filename,
             {
                 result[out_ts]--;
             }
-
-            min_time = std::min(min_time, in_ts);
-            max_time = std::max(max_time, out_ts);
 
     }
 
@@ -235,25 +214,20 @@ int main(int, char *argv[])
     }
 
     string filename = argv[1];
-    time_t start_time, end_time;
-    set<time_t> timestamps_set;
+
     BusynessMap data_map;
     bool use_date;
 
     if (filename.find(".txt") != string::npos)
     {
 
-        data_map = readDataFromTXT(filename,
-                                   start_time, end_time,
-                                   timestamps_set);
+        data_map = readDataFromTXT(filename);
         use_date = false;
     }
     else if (filename.find(".json") != string::npos)
     {
 
-        data_map = readDataFromJSON(filename,
-                                    start_time, end_time,
-                                    timestamps_set);
+        data_map = readDataFromJSON(filename);
         use_date = true;
     }
     else
@@ -266,15 +240,15 @@ int main(int, char *argv[])
     vector<time_t> times;
     int current_count = 0;
     int max_count = 0;
-    for (auto iter = timestamps_set.begin(); iter != timestamps_set.end(); iter++)
+    for (auto iter = data_map.begin(); iter != data_map.end(); iter++)
     {
-        current_count += data_map[*iter];
+        current_count += iter->second;
 
         if (current_count > max_count)
             max_count = current_count;
 
         values.push_back(current_count);
-        times.push_back(*iter);
+        times.push_back(iter->first);
     }
 
     printIntervals(values, times,
