@@ -13,6 +13,7 @@
 #include "json.hpp"
 using namespace std;
 using json = nlohmann::json;
+using Timestamp = long long int;
 
 #ifdef DRAW_PLOT
 #include "matplotlibcpp.h"
@@ -43,42 +44,61 @@ void drawPlot(const vector<int> &values, const vector<time_t> &times,
 
 //--------------------------------------------------------
 
-time_t calcTimestampForTime(const string &timeAsString)
+Timestamp calcTimestampForTime(const string &timeAsString)
 {
-    time_t hour, min;
-    sscanf(timeAsString.c_str(), "%ld:%ld", &hour, &min);
+    int hour, min;
+    sscanf(timeAsString.c_str(), "%d:%d", &hour, &min);
 
     return hour * 60 + min;
 }
 
-time_t calcTimestampForDate(const string &dateAsString)
+Timestamp calcTimestampForDate(const string &dateAsString)
 {
-    tm timestamp;
-    sscanf(dateAsString.c_str(), "%u-%u-%uT%u:%u:00", &timestamp.tm_year, &timestamp.tm_mon, &timestamp.tm_mday, &timestamp.tm_hour, &timestamp.tm_min);
-    timestamp.tm_sec = 0;
-    time_t res = mktime(&timestamp);
+    int year, month, day, hour, min;
+    sscanf(dateAsString.c_str(), "%d-%d-%dT%d:%d:00", &year, &month, &day, &hour, &min);
+
+    tm timeinfo = {0};
+    timeinfo.tm_year = year - 1900;
+    timeinfo.tm_mon = month - 1;
+    timeinfo.tm_mday = day;
+    timeinfo.tm_hour = hour;
+    timeinfo.tm_min = min;
+
+    Timestamp res = mktime(&timeinfo);
     return res;
 }
 
-string calcTimestringForTime(const time_t &ts)
+string calcTimestringForTime(const Timestamp &ts)
 {
-    time_t hour, min;
-    hour = ts / 60;
+    int hour, min;
+    hour = (int)ts / 60;
     min = ts % 60;
 
-    char buf[5];
-    sprintf(buf, "%.2ld:%.2ld", hour, min);
+    char buf[256];
+    sprintf(buf, "%.2d:%.2d", hour, min);
     string result = buf;
 
     return result;
 }
 
-string calcTimestringForDate(const time_t &ts)
+string calcTimestringForDate(const Timestamp &ts)
 {
-    tm * timeinfo = localtime(&ts);
+    time_t time = ts;
+    tm * timeinfo = localtime(&time);
 
-    char buf[17];
-    sprintf(buf, "%d-%.2d-%.2dT%.2d:%.2d:00", timeinfo->tm_year, timeinfo->tm_mon, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min);
+    if (!timeinfo)
+    {
+        cout << "Wrong Timestamp!" << ts;
+        return "";
+    }
+    int year = timeinfo->tm_year + 1900;
+    int month = timeinfo->tm_mon + 1;
+    int day = timeinfo->tm_mday;
+    int hour = timeinfo->tm_hour;
+    int min = timeinfo->tm_min;
+
+    char buf[256];
+    sprintf(buf, "%d-%.2d-%.2dT%.2d:%.2d:00", year, month, day, hour, min);
 
     string result = buf;
 
@@ -87,7 +107,7 @@ string calcTimestringForDate(const time_t &ts)
 
 //--------------------------------------------------------
 
-typedef map<time_t, int> BusynessMap;
+typedef map<Timestamp, int> BusynessMap;
 
 BusynessMap readDataFromTXT(const string &filename)
 {
@@ -105,8 +125,8 @@ BusynessMap readDataFromTXT(const string &filename)
             break;
         }
 
-        time_t in_ts = calcTimestampForTime(in_time);
-        time_t out_ts = calcTimestampForTime(out_time);
+        Timestamp in_ts = calcTimestampForTime(in_time);
+        Timestamp out_ts = calcTimestampForTime(out_time);
 
 
         if (result.find(in_ts) == result.end())
@@ -183,7 +203,7 @@ void printIntervals(const vector<int> &values, const vector<time_t> &times,
                     bool use_date)
 {
     bool isIntervalStarted = false;
-    for (size_t i = 0; i <= values.size(); i++)
+    for (size_t i = 0; i < values.size(); i++)
     {
         if (values[i] == max_value)
         {
